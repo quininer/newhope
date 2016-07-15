@@ -1,4 +1,4 @@
-#![feature(step_by)]
+#![feature(step_by, question_mark)]
 
 extern crate rand;
 extern crate byteorder;
@@ -11,7 +11,8 @@ mod error_correction;
 mod poly;
 mod newhope;
 
-use rand::{ Rng, OsRng };
+use std::io;
+use rand::{ Rng, OsRng, ChaChaRng };
 use tiny_keccak::Keccak;
 use poly::{ poly_frombytes, poly_tobytes };
 use newhope::{ rec_frombytes, rec_tobytes };
@@ -28,8 +29,8 @@ pub use newhope::{ keygen, sharedb, shareda };
 /// use newhope::NewHope;
 ///
 /// let (mut keya, mut keyb) = ([0; 32], [0; 32]);
-/// let alice = NewHope::new();
-/// let pkb = NewHope::exchange(&alice.export_public(), &mut keyb);
+/// let alice = NewHope::new().unwrap();
+/// let pkb = NewHope::exchange(&alice.export_public(), &mut keyb).unwrap();
 /// alice.exchange_from(&pkb, &mut keya);
 ///
 /// assert_eq!(keya, keyb);
@@ -41,19 +42,19 @@ pub struct NewHope {
 }
 
 impl NewHope {
-    pub fn new() -> NewHope {
-        let mut rng = OsRng::new().unwrap();
+    pub fn new() -> Result<NewHope, io::Error> {
+        let mut rng = OsRng::new()?;
 
         let mut nonce = [0; 32];
         rng.fill_bytes(&mut nonce);
 
-        let (sk, pk) = keygen(&nonce, rng.gen());
+        let (sk, pk) = keygen(&nonce, rng.gen::<ChaChaRng>());
 
-        NewHope {
+        Ok(NewHope {
             sk: sk,
             pk: pk,
             nonce: nonce
-        }
+        })
     }
 
     pub fn export_public(&self) -> [u8; SENDABYTES] {
@@ -81,9 +82,9 @@ impl NewHope {
         newhope
     }
 
-    pub fn exchange(pka: &[u8], sharedkey: &mut [u8]) -> [u8; SENDBBYTES] {
+    pub fn exchange(pka: &[u8], sharedkey: &mut [u8]) -> Result<[u8; SENDBBYTES], io::Error> {
         let (pk, nonce) = pka.split_at(POLY_BYTES);
-        let (key, pkb, c) = sharedb(&poly_frombytes(pk), nonce, OsRng::new().unwrap().gen());
+        let (key, pkb, c) = sharedb(&poly_frombytes(pk), nonce, OsRng::new()?.gen::<ChaChaRng>());
 
         let mut sha3 = Keccak::new_sha3_256();
         sha3.update(&key);
@@ -92,7 +93,7 @@ impl NewHope {
         let mut output = [0; SENDBBYTES];
         output[..POLY_BYTES].clone_from_slice(&poly_tobytes(&pkb));
         output[POLY_BYTES..].clone_from_slice(&rec_tobytes(&c));
-        output
+        Ok(output)
     }
 
     pub fn exchange_from(&self, pkb: &[u8], sharedkey: &mut [u8]) {

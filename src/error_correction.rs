@@ -1,4 +1,4 @@
-use rand::{ Rng, ChaChaRng };
+use rand::Rng;
 use ::params::Q;
 
 
@@ -45,7 +45,7 @@ fn ld_decode(xi0: i32, xi1: i32, xi2: i32, xi3: i32) -> i16 {
 }
 
 
-pub fn helprec(c: &mut [u16], v: &[u16], rng: &mut ChaChaRng) {
+pub fn helprec<R: Rng>(c: &mut [u16], v: &[u16], rng: &mut R) {
     let (mut v0, mut v1, mut v_tmp) = ([0; 4], [0; 4], [0; 4]);
     let mut r = [0; 32];
     rng.fill_bytes(&mut r);

@@ -1,4 +1,4 @@
-use rand::{ Rng, ChaChaRng };
+use rand::Rng;
 use byteorder::{ ByteOrder, LittleEndian };
 use tiny_keccak::Keccak;
 use ::params::{
@@ -93,7 +93,7 @@ pub fn uniform(a: &mut [u16], nonce: &[u8]) {
     }
 }
 
-pub fn noise(r: &mut [u16], rng: &mut ChaChaRng) {
+pub fn noise<R: Rng>(r: &mut [u16], rng: &mut R) {
     let mut buf = [0; 4 * N];
     rng.fill_bytes(&mut buf);
 
