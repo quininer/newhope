@@ -1,5 +1,11 @@
 pub const N: usize = 1024;
 pub const Q: usize = 12289;
+pub const POLY_BYTES: usize = 1792;
+pub const SEEDBYTES: usize = 32;
+pub const RECBYTES: usize = 256;
+pub const SENDABYTES: usize = POLY_BYTES + SEEDBYTES;
+pub const SENDBBYTES: usize = POLY_BYTES + RECBYTES;
+
 
 pub const OMEGAS_MONTGOMERY: [u16; N / 2] = [
     4075,  6974,  7373,  7965,  3262,  5079,  522,   2169,  6364,  1018,  1041,
