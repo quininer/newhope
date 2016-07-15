@@ -4,6 +4,6 @@ version = "0.1.0"
 authors = ["quininer kel <quininer@live.com>"]
 
 [dependencies]
-rand = "*"
-tiny-keccak = "*"
+rand = "0.3"
+tiny-keccak = { git = "https://github.com/quininer/tiny-keccak.git" }
 byteorder = { version = "0.5", features = [] }

@@ -2,6 +2,7 @@
 
 extern crate rand;
 extern crate byteorder;
+extern crate tiny_keccak;
 
 pub mod params;
 pub mod reduce;
