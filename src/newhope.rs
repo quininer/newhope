@@ -66,6 +66,7 @@ pub fn rec_tobytes(c: &[u16]) -> [u8; RECBYTES] {
 /// ```
 /// # extern crate rand;
 /// # extern crate newhope;
+/// # use newhope::N;
 /// # use newhope::{ keygen, sharedb, shareda };
 /// # fn main() {
 /// use rand::{ Rng, OsRng };
@@ -74,35 +75,36 @@ pub fn rec_tobytes(c: &[u16]) -> [u8; RECBYTES] {
 /// let mut nonce = [0; 32];
 /// rng.fill_bytes(&mut nonce);
 ///
-/// let (ask, apk) = keygen(&nonce, rng.gen());
-/// let (bsharedkey, bpk, c) = sharedb(&apk, &nonce, rng.gen());
-/// let asharedkey = shareda(&ask, &bpk, &c);
+/// let (mut ask, mut apk, mut asharedkey) = ([0; N], [0; N], [0; N]);
+/// let (mut bpk, mut c, mut bsharedkey) = ([0; N], [0; N], [0; N]);
+///
+/// keygen(&mut ask, &mut apk, &nonce, rng.gen());
+/// sharedb(&mut bsharedkey, &mut bpk, &mut c, &apk, &nonce, rng.gen());
+/// shareda(&mut asharedkey, &ask, &bpk, &c);
 ///
 /// for i in 0..asharedkey.len() {
 ///     assert_eq!(asharedkey[i], bsharedkey[i]);
 /// }
 /// # }
 /// ```
-pub fn keygen(nonce: &[u8], mut rng: ChaChaRng) -> ([u16; N], [u16; N]) {
-    let (mut sk, mut pk) = ([0; N], [0; N]);
+pub fn keygen(sk: &mut [u16], pk: &mut [u16], nonce: &[u8], mut rng: ChaChaRng) {
     let (mut a, mut e) = ([0; N], [0; N]);
 
     uniform(&mut a, nonce);
 
-    noise(&mut sk, &mut rng);
-    ntt(&mut sk);
+    noise(sk, &mut rng);
+    ntt(sk);
 
     noise(&mut e, &mut rng);
     ntt(&mut e);
 
-    offer_computation(&mut pk, &sk, &e, &a);
-
-    (sk, pk)
+    offer_computation(pk, sk, &e, &a);
 }
 
-pub fn sharedb(pka: &[u16], nonce: &[u8], mut rng: ChaChaRng) -> ([u8; N], [u16; N], [u16; N]) {
-    let (mut sharedkey, mut pk, mut c) =
-        ([0; N], [0; N], [0; N]);
+pub fn sharedb(
+    sharedkey: &mut [u8], pk: &mut [u16], c: &mut [u16],
+    pka: &[u16], nonce: &[u8], mut rng: ChaChaRng
+) {
     let (mut a, mut sp, mut ep, mut epp) =
         ([0; N], [0; N], [0; N], [0; N]);
 
@@ -115,22 +117,11 @@ pub fn sharedb(pka: &[u16], nonce: &[u8], mut rng: ChaChaRng) -> ([u8; N], [u16;
     noise(&mut epp, &mut rng);
 
     accept_computation(
-        &mut sharedkey, &mut pk, &mut c,
+        sharedkey, pk, c,
         &sp, &ep, &epp, pka, &a, &mut rng
     );
-
-    (sharedkey, pk, c)
 }
 
-pub fn shareda(ska: &[u16], pkb: &[u16], c: &[u16]) -> [u8; N] {
-    let mut sharedkey = [0; N];
-
-    finish_computation(&mut sharedkey, ska, pkb, c);
-
-    sharedkey
-}
-
-
-#[test]
-fn test_kex() {
+pub fn shareda(sharedkey: &mut [u8], ska: &[u16], pkb: &[u16], c: &[u16]) {
+    finish_computation(sharedkey, ska, pkb, c);
 }
