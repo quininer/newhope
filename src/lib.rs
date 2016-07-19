@@ -11,8 +11,8 @@ mod error_correction;
 mod poly;
 mod newhope;
 
-use std::io;
-use rand::{ Rng, OsRng, ChaChaRng };
+#[cfg(feature = "api")] use std::io;
+#[cfg(feature = "api")] use rand::{ Rng, OsRng, ChaChaRng };
 use tiny_keccak::Keccak;
 pub use poly::{ poly_frombytes, poly_tobytes };
 pub use params::{
@@ -38,12 +38,14 @@ pub use newhope::{
 /// assert!(keya != [0; 32]);
 /// assert_eq!(keya, keyb);
 /// ```
+#[cfg(feature = "api")]
 pub struct NewHope {
     sk: [u16; N],
     pk: [u16; N],
     nonce: [u8; 32]
 }
 
+#[cfg(feature = "api")]
 impl NewHope {
     pub fn new() -> Result<NewHope, io::Error> {
         let mut rng = OsRng::new()?.gen::<ChaChaRng>();
@@ -104,9 +106,7 @@ impl NewHope {
             &poly_frombytes(pk), nonce, OsRng::new()?.gen::<ChaChaRng>()
         );
 
-        let mut sha3 = Keccak::new_sha3_256();
-        sha3.update(&key);
-        sha3.finalize(sharedkey);
+        sha3_256(sharedkey, &key);
 
         let mut output = [0; SENDBBYTES];
         output[..POLY_BYTES].clone_from_slice(&poly_tobytes(&pkb));
@@ -119,8 +119,12 @@ impl NewHope {
         let (pk, rec) = pkb.split_at(POLY_BYTES);
         shareda(&mut key, &self.sk, &poly_frombytes(pk), &rec_frombytes(rec));
 
-        let mut sha3 = Keccak::new_sha3_256();
-        sha3.update(&key);
-        sha3.finalize(sharedkey);
+        sha3_256(sharedkey, &key);
     }
+}
+
+pub fn sha3_256(output: &mut [u8], input: &[u8]) {
+    let mut sha3 = Keccak::new_sha3_256();
+    sha3.update(input);
+    sha3.finalize(output)
 }
