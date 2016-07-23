@@ -75,7 +75,9 @@ pub fn uniform(a: &mut [u16], nonce: &[u8]) {
     let mut shake128 = Keccak::new_shake128();
 
     shake128.update(nonce);
-    shake128.finalize(&mut buf);
+    shake128.pad();
+    shake128.keccakf();
+    shake128.squeeze(&mut buf);
 
     while ctr < N {
         let val = LittleEndian::read_u16(&buf[pos..]) & 0x3fff;
