@@ -2,7 +2,6 @@
 
 extern crate test;
 extern crate newhope;
-extern crate cnewhope;
 
 use test::Bencher;
 
