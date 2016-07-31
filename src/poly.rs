@@ -2,7 +2,7 @@ use rand::Rng;
 use byteorder::{ ByteOrder, LittleEndian };
 use tiny_keccak::Keccak;
 use ::params::{
-    N, Q, POLY_BYTES,
+    N, Q, POLY_BYTES, MODULI,
     PSIS_BITREV_MONTGOMERY, OMEGAS_MONTGOMERY,
     PSIS_INV_MONTGOMERY, OMEGAS_INV_MONTGOMERY
 };
@@ -70,8 +70,8 @@ pub fn poly_tobytes(p: &[u16; N]) -> [u8; POLY_BYTES] {
 
 
 pub fn uniform(a: &mut [u16], nonce: &[u8]) {
-    let (mut nblocks, mut pos, mut ctr) = (16, 0, 0);
-    let mut buf = [0; SHAKE128_RATE * 16];
+    let (mut nblocks, mut pos, mut ctr) = (13, 0, 0);
+    let mut buf = [0; SHAKE128_RATE * 13];
     let mut shake128 = Keccak::new_shake128();
 
     shake128.update(nonce);
@@ -80,12 +80,13 @@ pub fn uniform(a: &mut [u16], nonce: &[u8]) {
     shake128.squeeze(&mut buf);
 
     while ctr < N {
-        let val = LittleEndian::read_u16(&buf[pos..]) & 0x3fff;
-        if val < Q as u16 {
-            a[ctr] = val;
+        let val = LittleEndian::read_u16(&buf[pos..]);
+        pos += 2;
+        let r = (val as usize) / Q;
+        if r < 5 {
+            a[ctr] = val - (MODULI[r] as u16);
             ctr += 1;
         }
-        pos += 2;
 
         if pos > SHAKE128_RATE * nblocks - 2 {
             nblocks = 1;
