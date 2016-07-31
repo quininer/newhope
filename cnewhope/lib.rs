@@ -11,6 +11,12 @@ pub struct Poly {
     pub coeffs: [u16; N]
 }
 
+impl Default for Poly {
+    fn default() -> Poly {
+        Poly { coeffs: [0; N] }
+    }
+}
+
 extern "C" {
     pub fn newhope_keygen(send: *mut u8, sk: *mut Poly);
     pub fn newhope_sharedb(sharedkey: *mut u8, send: *mut u8, received: *const u8);
@@ -20,7 +26,7 @@ extern "C" {
 
 #[test]
 fn test_newhope() {
-    let mut ska = Poly { coeffs: [0; N] };
+    let mut ska = Poly::default();
     let mut senda = [0; SENDABYTES];
     let mut sendb = [0; SENDBBYTES];
     let mut keya = [0; 32];
@@ -33,5 +39,5 @@ fn test_newhope() {
     }
 
     assert!(keya != [0; 32]);
-    assert_eq!(keya, keyb)
+    assert_eq!(keya, keyb);
 }

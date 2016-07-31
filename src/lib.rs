@@ -98,7 +98,7 @@ impl NewHope {
     }
 
     pub fn exchange(pka: &[u8], sharedkey: &mut [u8]) -> Result<[u8; SENDBBYTES], io::Error> {
-        let (mut key, mut pkb, mut c) = ([0; N], [0; N], [0; N]);
+        let (mut key, mut pkb, mut c) = ([0; 32], [0; N], [0; N]);
         let (pk, nonce) = pka.split_at(POLY_BYTES);
 
         sharedb(
@@ -115,7 +115,7 @@ impl NewHope {
     }
 
     pub fn exchange_from(&self, pkb: &[u8], sharedkey: &mut [u8]) {
-        let mut key = [0; N];
+        let mut key = [0; 32];
         let (pk, rec) = pkb.split_at(POLY_BYTES);
         shareda(&mut key, &self.sk, &poly_frombytes(pk), &rec_frombytes(rec));
 
