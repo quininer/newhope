@@ -1,0 +1,3 @@
+[submodule "cnewhope/newhope"]
+	path = cnewhope/newhope
+	url = https://github.com/tpoeppelmann/newhope.git

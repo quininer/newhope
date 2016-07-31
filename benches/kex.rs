@@ -1,45 +1,33 @@
 #![feature(test)]
 
 extern crate test;
-extern crate rand;
 extern crate newhope;
 
 use test::Bencher;
-use rand::{ Rng, OsRng, ChaChaRng };
-use newhope::{
-    N,
-    keygen, sharedb, shareda
-};
-
 
 #[bench]
-fn bench_keygen(b: &mut Bencher) {
-    let (mut sk, mut pk) = ([0; N], [0; N]);
-    let (mut nonce, mut rng) = ([0; 32], OsRng::new().unwrap().gen::<ChaChaRng>());
-    rng.fill_bytes(&mut nonce);
-
-    b.iter(|| keygen(&mut sk, &mut pk, &nonce, rng));
+fn bench_newhope_keygen(b: &mut Bencher) {
+    b.iter(|| newhope::NewHope::new());
 }
 
 #[bench]
-fn bench_kex_b(b: &mut Bencher) {
-    let (mut output, mut pkb, mut rec) = ([0; N], [0; N], [0; N]);
-    let (mut sk, mut pka) = ([0; N], [0; N]);
-    let (mut nonce, mut rng) = ([0; 32], OsRng::new().unwrap().gen::<ChaChaRng>());
-    rng.fill_bytes(&mut nonce);
-    keygen(&mut sk, &mut pka, &nonce, rng);
+fn bench_newhope_sharedb(b: &mut Bencher) {
+    use newhope::NewHope;
 
-    b.iter(|| sharedb(&mut output, &mut pkb, &mut rec, &pka, &nonce, rng));
+    let mut output = [0; 32];
+    let alice = NewHope::new().unwrap();
+    let pka = alice.export_public();
+
+    b.iter(|| NewHope::exchange(&pka, &mut output));
 }
 
 #[bench]
-fn bench_kex_a(b: &mut Bencher) {
-    let (mut output, mut pkb, mut rec) = ([0; N], [0; N], [0; N]);
-    let (mut sk, mut pka) = ([0; N], [0; N]);
-    let (mut nonce, mut rng) = ([0; 32], OsRng::new().unwrap().gen::<ChaChaRng>());
-    rng.fill_bytes(&mut nonce);
-    keygen(&mut sk, &mut pka, &nonce, rng);
-    sharedb(&mut output, &mut pkb, &mut rec, &pka, &nonce, rng);
+fn bench_newhope_shareda(b: &mut Bencher) {
+    use newhope::NewHope;
 
-    b.iter(|| shareda(&mut output, &sk, &pkb, &rec));
+    let mut output = [0; 32];
+    let alice = NewHope::new().unwrap();
+    let pkb = NewHope::exchange(&alice.export_public(), &mut output).unwrap();
+
+    b.iter(|| alice.exchange_from(&pkb, &mut output));
 }
