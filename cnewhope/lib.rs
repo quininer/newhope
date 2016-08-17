@@ -1,3 +1,6 @@
+//! ref https://cryptojedi.org/crypto/#newhope
+//! ref https://cryptojedi.org/crypto/data/newhope-20160815.tar.bz2
+
 pub const N: usize = 1024;
 pub const Q: usize = 12289;
 pub const POLY_BYTES: usize = 1792;
