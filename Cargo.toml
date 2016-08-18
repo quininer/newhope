@@ -14,3 +14,4 @@ byteorder = "0.5"
 [features]
 default = [ "api" ]
 api = []
+tor = []

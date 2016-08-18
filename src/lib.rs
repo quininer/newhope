@@ -4,6 +4,7 @@ extern crate rand;
 extern crate byteorder;
 extern crate tiny_keccak;
 
+#[cfg(feature = "tor")] pub mod batcher;
 mod params;
 mod reduce;
 mod ntt;

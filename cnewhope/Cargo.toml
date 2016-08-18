@@ -12,3 +12,6 @@ gcc = "0.3"
 
 [dev-dependencies]
 newhope = { path = "..", version = "0.1" }
+
+[features]
+tor = [ "newhope/tor" ]

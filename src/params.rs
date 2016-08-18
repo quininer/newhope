@@ -5,8 +5,6 @@ pub const SEEDBYTES: usize = 32;
 pub const RECBYTES: usize = 256;
 pub const SENDABYTES: usize = POLY_BYTES + SEEDBYTES;
 pub const SENDBBYTES: usize = POLY_BYTES + RECBYTES;
-pub const MODULI: [usize; 5] = [0 * Q, 1 * Q, 2 * Q, 3 * Q, 4 * Q];
-
 
 pub const OMEGAS_MONTGOMERY: [u16; N / 2] = [
     4075,  6974,  7373,  7965,  3262,  5079,  522,   2169,  6364,  1018,  1041,

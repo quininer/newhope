@@ -1,3 +1,5 @@
+#![feature(stmt_expr_attributes)]
+
 extern crate gcc;
 
 use std::path::Path;
@@ -5,7 +7,8 @@ use gcc::Config;
 
 
 fn main() {
-    let cnewhope_root = Path::new("newhope");
+    #[cfg(not(feature = "tor"))] let cnewhope_root = Path::new("newhope").join("ref");
+    #[cfg(feature = "tor")] let cnewhope_root = Path::new("newhope").join("torref");
     let mut cfg = Config::new();
 
     for src in &[
@@ -17,12 +20,14 @@ fn main() {
         "newhope.c",
         "reduce.c",
         "fips202.c",
-        "randombytes.c"
+        "randombytes.c",
+
+        #[cfg(feature = "tor")] "batcher.c",
     ] {
-        cfg.file(cnewhope_root.join("ref").join(src));
+        cfg.file(cnewhope_root.join(src));
     }
 
-    cfg.include(cnewhope_root.join("ref").join("newhope.h"))
+    cfg.include(cnewhope_root.join("newhope.h"))
         .debug(true)
         .flag("-march=native")
         .compile("libnewhope.a");
