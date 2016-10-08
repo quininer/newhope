@@ -140,11 +140,8 @@ pub fn uniform(a: &mut [u16], nonce: &[u8]) {
 }
 
 pub fn noise<R: Rng>(r: &mut [u16], rng: &mut R) {
-    let mut buf = [0; 4 * N];
-    rng.fill_bytes(&mut buf);
-
     for i in 0..N {
-        let t = LittleEndian::read_u32(&buf[4 * i..]);
+        let t = rng.gen::<u32>();
         let d = (0..8).fold(0, |sum, j| sum + ((t >> j) & 0x01010101));
         let a = ((d >> 8) & 0xff) + (d & 0xff);
         let b = (d >> 24) + ((d >> 16) & 0xff);
