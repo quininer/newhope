@@ -1,4 +1,4 @@
-use rand::ChaChaRng;
+use rand::Rng;
 use ::params::{ N, RECBYTES };
 use ::error_correction::{ helprec, rec };
 use ::poly::{
@@ -15,10 +15,10 @@ fn offer_computation(pk: &mut [u16], s: &[u16], e: &[u16], a: &[u16]) {
 }
 
 #[inline]
-fn accept_computation(
+fn accept_computation<R: Rng>(
     key: &mut [u8], bp: &mut [u16], c: &mut [u16],
     sp: &[u16], ep: &[u16], epp: &[u16], pk: &[u16], a: &[u16],
-    rng: &mut ChaChaRng
+    rng: &mut R
 ) {
     let (mut v, mut t) = ([0; N], [0; N]);
 
@@ -69,7 +69,7 @@ pub fn rec_tobytes(c: &[u16]) -> [u8; RECBYTES] {
 /// # use newhope::N;
 /// # use newhope::{ keygen, sharedb, shareda };
 /// # fn main() {
-/// use rand::{ Rng, OsRng };
+/// use rand::{ Rng, OsRng, ChaChaRng };
 ///
 /// let mut rng = OsRng::new().unwrap();
 /// let mut nonce = [0; 32];
@@ -78,8 +78,8 @@ pub fn rec_tobytes(c: &[u16]) -> [u8; RECBYTES] {
 /// let (mut ask, mut apk, mut asharedkey) = ([0; N], [0; N], [0; N]);
 /// let (mut bpk, mut c, mut bsharedkey) = ([0; N], [0; N], [0; N]);
 ///
-/// keygen(&mut ask, &mut apk, &nonce, rng.gen());
-/// sharedb(&mut bsharedkey, &mut bpk, &mut c, &apk, &nonce, rng.gen());
+/// keygen(&mut ask, &mut apk, &nonce, rng.gen::<ChaChaRng>());
+/// sharedb(&mut bsharedkey, &mut bpk, &mut c, &apk, &nonce, rng.gen::<ChaChaRng>());
 /// shareda(&mut asharedkey, &ask, &bpk, &c);
 ///
 /// for i in 0..asharedkey.len() {
@@ -87,7 +87,7 @@ pub fn rec_tobytes(c: &[u16]) -> [u8; RECBYTES] {
 /// }
 /// # }
 /// ```
-pub fn keygen(sk: &mut [u16], pk: &mut [u16], nonce: &[u8], mut rng: ChaChaRng) {
+pub fn keygen<R: Rng>(sk: &mut [u16], pk: &mut [u16], nonce: &[u8], mut rng: R) {
     let (mut a, mut e) = ([0; N], [0; N]);
 
     uniform(&mut a, nonce);
@@ -101,9 +101,9 @@ pub fn keygen(sk: &mut [u16], pk: &mut [u16], nonce: &[u8], mut rng: ChaChaRng) 
     offer_computation(pk, sk, &e, &a);
 }
 
-pub fn sharedb(
+pub fn sharedb<R: Rng>(
     sharedkey: &mut [u8], pk: &mut [u16], c: &mut [u16],
-    pka: &[u16], nonce: &[u8], mut rng: ChaChaRng
+    pka: &[u16], nonce: &[u8], mut rng: R
 ) {
     let (mut a, mut sp, mut ep, mut epp) =
         ([0; N], [0; N], [0; N], [0; N]);

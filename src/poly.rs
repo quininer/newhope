@@ -102,7 +102,6 @@ fn discardtopoly(a: &mut [u16], buf: &[u8]) -> bool {
     use ::batcher::batcher84;
 
     let mut x = [0; SHAKE128_RATE * 16 / 2];
-
     for (i, b) in x.iter_mut().enumerate() {
         *b = LittleEndian::read_u16(&buf[2 * i..]);
     }
@@ -118,9 +117,7 @@ fn discardtopoly(a: &mut [u16], buf: &[u8]) -> bool {
     if r.checked_shr(31).is_some() {
         true
     } else {
-        for i in 0..N {
-            a[i] = x[i];
-        }
+        a[..N].clone_from_slice(&x[..N]);
         false
     }
 }

@@ -29,11 +29,9 @@ extern "C" {
 
 #[test]
 fn test_newhope() {
+    let (mut senda, mut sendb) = ([0; SENDABYTES], [0; SENDBBYTES]);
+    let (mut keya, mut keyb) = ([0; 32], [0; 32]);
     let mut ska = Poly::default();
-    let mut senda = [0; SENDABYTES];
-    let mut sendb = [0; SENDBBYTES];
-    let mut keya = [0; 32];
-    let mut keyb = [0; 32];
 
     unsafe {
         newhope_keygen(senda.as_mut_ptr(), &mut ska);
