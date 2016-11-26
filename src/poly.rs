@@ -33,38 +33,40 @@ pub fn poly_frombytes(a: &[u8]) -> [u16; N] {
 pub fn poly_tobytes(p: &[u16; N]) -> [u8; POLY_BYTES] {
     let mut output = [0; POLY_BYTES];
     for i in 0..(N / 4) {
-        let mut t0 = barrett_reduce(p[4 * i + 0]);
-        let mut t1 = barrett_reduce(p[4 * i + 1]);
-        let mut t2 = barrett_reduce(p[4 * i + 2]);
-        let mut t3 = barrett_reduce(p[4 * i + 3]);
+        let mut t = [
+            barrett_reduce(p[4 * i + 0]),
+            barrett_reduce(p[4 * i + 1]),
+            barrett_reduce(p[4 * i + 2]),
+            barrett_reduce(p[4 * i + 3])
+        ];
 
-        let mut m = t0.wrapping_sub(Q as u16);
+        let mut m = t[0].wrapping_sub(Q as u16);
         let mut c = m as i16;
         c >>= 15;
-        t0 = m ^ ((t0 ^ m) & c as u16);
+        t[0] = m ^ ((t[0] ^ m) & c as u16);
 
-        m = t1.wrapping_sub(Q as u16);
+        m = t[1].wrapping_sub(Q as u16);
         c = m as i16;
         c >>= 15;
-        t1 = m ^ ((t1 ^ m) & c as u16);
+        t[1] = m ^ ((t[1] ^ m) & c as u16);
 
-        m = t2.wrapping_sub(Q as u16);
+        m = t[2].wrapping_sub(Q as u16);
         c = m as i16;
         c >>= 15;
-        t2 = m ^ ((t2 ^ m) & c as u16);
+        t[2] = m ^ ((t[2] ^ m) & c as u16);
 
-        m = t3.wrapping_sub(Q as u16);
+        m = t[3].wrapping_sub(Q as u16);
         c = m as i16;
         c >>= 15;
-        t3 = m ^ ((t3 ^ m) & c as u16);
+        t[3] = m ^ ((t[3] ^ m) & c as u16);
 
-        output[7 * i + 0] = (t0 & 0xff) as u8;
-        output[7 * i + 1] = ((t0 >> 8) | (t1 << 6)) as u8;
-        output[7 * i + 2] = (t1 >> 2) as u8;
-        output[7 * i + 3] = ((t1 >> 10) | (t2 << 4)) as u8;
-        output[7 * i + 4] = (t2 >> 4) as u8;
-        output[7 * i + 5] = ((t2 >> 12) | (t3 << 2)) as u8;
-        output[7 * i + 6] = (t3 >> 6) as u8;
+        output[7 * i + 0] = (t[0] & 0xff) as u8;
+        output[7 * i + 1] = ((t[0] >> 8) | (t[1] << 6)) as u8;
+        output[7 * i + 2] = (t[1] >> 2) as u8;
+        output[7 * i + 3] = ((t[1] >> 10) | (t[2] << 4)) as u8;
+        output[7 * i + 4] = (t[2] >> 4) as u8;
+        output[7 * i + 5] = ((t[2] >> 12) | (t[3] << 2)) as u8;
+        output[7 * i + 6] = (t[3] >> 6) as u8;
     }
     output
 }
@@ -129,10 +131,10 @@ pub fn uniform(a: &mut [u16], nonce: &[u8]) {
     shake128.absorb(nonce);
     shake128.pad();
     shake128.keccakf();
+    shake128.squeeze(&mut buf);
 
-    loop {
+    while discardtopoly(a, &buf) {
         shake128.squeeze(&mut buf);
-        if !discardtopoly(a, &buf) { break }
     }
 }
 

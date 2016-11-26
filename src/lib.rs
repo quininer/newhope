@@ -1,4 +1,4 @@
-#![feature(step_by, question_mark)]
+#![feature(step_by)]
 
 extern crate rand;
 extern crate byteorder;
