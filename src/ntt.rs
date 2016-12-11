@@ -100,10 +100,8 @@ pub fn ntt(a: &mut [u16], omega: &[u16]) {
     for i in (0..10).step_by(2) {
         let mut distance = 1 << i;
         for start in 0..distance {
-            let mut jt = 0;
-            for j in (start..(N - 1)).step_by(2 * distance) {
+            for (jt, j) in (start..(N - 1)).step_by(2 * distance).enumerate() {
                 let w = omega[jt] as u32;
-                jt += 1;
                 let tmp = a[j];
                 a[j] = tmp.wrapping_add(a[j + distance]);
                 a[j + distance] = montgomery_reduce(
@@ -114,10 +112,8 @@ pub fn ntt(a: &mut [u16], omega: &[u16]) {
 
         distance <<= 1;
         for start in 0..distance {
-            let mut jt = 0;
-            for j in (start..(N - 1)).step_by(2 * distance) {
+            for (jt, j) in (start..(N - 1)).step_by(2 * distance).enumerate() {
                 let w = omega[jt] as u32;
-                jt += 1;
                 let tmp = a[j];
                 a[j] = barrett_reduce(tmp.wrapping_add(a[j + distance]));
                 a[j + distance] = montgomery_reduce(
@@ -143,9 +139,7 @@ fn test_bitrev_vector() {
         poly[i] = i as u16;
     }
     bitrev_vector(&mut poly);
-    for i in 0..N {
-        assert_eq!(poly[i], output[i]);
-    }
+    assert_eq!(poly[..], output[..]);
 }
 
 #[test]
@@ -199,7 +193,5 @@ fn test_ntt() {
         r[i] = i as u16;
     }
     ntt(&mut r, &OMEGAS_MONTGOMERY);
-    for i in 0..N {
-        assert_eq!(r[i], output[i]);
-    }
+    assert_eq!(r[..], output[..]);
 }
