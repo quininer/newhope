@@ -1,3 +1,4 @@
+extern crate libc;
 extern crate newhope;
 extern crate cnewhope;
 
@@ -30,4 +31,6 @@ fn test_kex_c() {
 
     assert!(keya != [0; 32]);
     assert_eq!(keya, keyb);
+
+    unsafe { libc::free(ska as *mut libc::c_void) };
 }

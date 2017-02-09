@@ -22,6 +22,8 @@ extern "C" {
 
 #[test]
 fn test_newhope() {
+    extern crate libc;
+
     let (mut senda, mut sendb) = ([0; SENDABYTES], [0; SENDBBYTES]);
     let (mut keya, mut keyb) = ([0; 32], [0; 32]);
 
@@ -29,6 +31,7 @@ fn test_newhope() {
         let ska = newhope_keygen_poly(senda.as_mut_ptr());
         newhope_sharedb(keyb.as_mut_ptr(), sendb.as_mut_ptr(), senda.as_ptr());
         newhope_shareda(keya.as_mut_ptr(), ska, sendb.as_ptr());
+        libc::free(ska as *mut libc::c_void);
     }
 
     assert!(keya != [0; 32]);

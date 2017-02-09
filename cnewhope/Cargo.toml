@@ -11,6 +11,7 @@ path = "lib.rs"
 gcc = "0.3"
 
 [dev-dependencies]
+libc = "0.2"
 newhope = { path = "..", version = "0.1" }
 
 [features]
