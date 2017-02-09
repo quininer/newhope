@@ -119,7 +119,7 @@ fn discardtopoly(a: &mut [u16], buf: &[u8]) -> bool {
     if r.checked_shr(31).is_some() {
         true
     } else {
-        a[..N].clone_from_slice(&x[..N]);
+        a[..N].copy_from_slice(&x[..N]);
         false
     }
 }

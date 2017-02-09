@@ -7,14 +7,12 @@ use ::poly::{
 };
 
 
-#[inline]
 fn offer_computation(pk: &mut [u16], s: &[u16], e: &[u16], a: &[u16]) {
     let mut r = [0; N];
     pointwise(&mut r, s, a);
     add(pk, e, &r);
 }
 
-#[inline]
 fn accept_computation<R: Rng>(
     key: &mut [u8], bp: &mut [u16], c: &mut [u16],
     sp: &[u16], ep: &[u16], epp: &[u16], pk: &[u16], a: &[u16],
@@ -32,7 +30,6 @@ fn accept_computation<R: Rng>(
     rec(key, &v, c);
 }
 
-#[inline]
 fn finish_computation(key: &mut [u8], sk: &[u16], bp: &[u16], c: &[u16]) {
     let mut v = [0; N];
     pointwise(&mut v, sk, bp);
@@ -87,6 +84,7 @@ pub fn rec_tobytes(c: &[u16]) -> [u8; RECBYTES] {
 /// }
 /// # }
 /// ```
+#[inline]
 pub fn keygen<R: Rng>(sk: &mut [u16], pk: &mut [u16], nonce: &[u8], mut rng: R) {
     let (mut a, mut e) = ([0; N], [0; N]);
 
@@ -101,6 +99,7 @@ pub fn keygen<R: Rng>(sk: &mut [u16], pk: &mut [u16], nonce: &[u8], mut rng: R) 
     offer_computation(pk, sk, &e, &a);
 }
 
+#[inline]
 pub fn sharedb<R: Rng>(
     sharedkey: &mut [u8], pk: &mut [u16], c: &mut [u16],
     pka: &[u16], nonce: &[u8], mut rng: R
@@ -122,6 +121,7 @@ pub fn sharedb<R: Rng>(
     );
 }
 
+#[inline]
 pub fn shareda(sharedkey: &mut [u8], ska: &[u16], pkb: &[u16], c: &[u16]) {
     finish_computation(sharedkey, ska, pkb, c);
 }

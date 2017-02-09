@@ -2,3 +2,4 @@ target
 Cargo.lock
 
 newhope/
+*.tar.bz2

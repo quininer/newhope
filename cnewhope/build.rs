@@ -1,5 +1,3 @@
-#![feature(stmt_expr_attributes)]
-
 extern crate gcc;
 
 use std::path::Path;
@@ -27,7 +25,10 @@ fn main() {
         cfg.file(cnewhope_root.join(src));
     }
 
-    cfg.include(cnewhope_root.join("newhope.h"))
+    cfg.file("keygen_poly.c");
+
+    cfg.include(cnewhope_root)
+        .opt_level(3)
         .debug(true)
         .flag("-march=native")
         .compile("libnewhope.a");

@@ -64,8 +64,8 @@ impl NewHope {
 
     pub fn export_public(&self) -> [u8; SENDABYTES] {
         let mut output = [0; SENDABYTES];
-        output[..POLY_BYTES].clone_from_slice(&poly_tobytes(&self.pk));
-        output[POLY_BYTES..].clone_from_slice(&self.nonce);
+        output[..POLY_BYTES].copy_from_slice(&poly_tobytes(&self.pk));
+        output[POLY_BYTES..].copy_from_slice(&self.nonce);
         output
     }
 
@@ -92,9 +92,9 @@ impl NewHope {
             pk: [0; N],
             nonce: [0; 32]
         };
-        newhope.sk.clone_from_slice(&poly_frombytes(sk));
-        newhope.pk.clone_from_slice(&poly_frombytes(pk));
-        newhope.nonce.clone_from_slice(nonce);
+        newhope.sk.copy_from_slice(&poly_frombytes(sk));
+        newhope.pk.copy_from_slice(&poly_frombytes(pk));
+        newhope.nonce.copy_from_slice(nonce);
         newhope
     }
 
@@ -110,8 +110,8 @@ impl NewHope {
         sha3_256(sharedkey, &key);
 
         let mut output = [0; SENDBBYTES];
-        output[..POLY_BYTES].clone_from_slice(&poly_tobytes(&pkb));
-        output[POLY_BYTES..].clone_from_slice(&rec_tobytes(&c));
+        output[..POLY_BYTES].copy_from_slice(&poly_tobytes(&pkb));
+        output[POLY_BYTES..].copy_from_slice(&rec_tobytes(&c));
         Ok(output)
     }
 
@@ -124,6 +124,7 @@ impl NewHope {
     }
 }
 
+#[inline]
 pub fn sha3_256(output: &mut [u8], input: &[u8]) {
     let mut sha3 = Keccak::new_sha3_256();
     sha3.update(input);
