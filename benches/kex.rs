@@ -17,6 +17,7 @@ fn bench_newhope_keygen(b: &mut Bencher) {
         let mut nonce = [0; 32];
         rng.fill_bytes(&mut nonce);
         keygen(&mut sk[..], &mut pk, &nonce, rng.gen::<ChaChaRng>());
+        poly_tobytes(&pk);
     });
 }
 
@@ -30,12 +31,16 @@ fn bench_newhope_sharedb(b: &mut Bencher) {
     let mut rng = OsRng::new().unwrap().gen::<ChaChaRng>();
     rng.fill_bytes(&mut nonce);
     keygen(&mut ska, &mut pka, &nonce, rng.gen::<ChaChaRng>());
+    let pka_bytes = poly_tobytes(&pka);
 
     b.iter(|| {
+        let pka = poly_frombytes(&pka_bytes);
         sharedb(
             &mut keyb, &mut pkb, &mut rec,
             &pka, &nonce, rng.gen::<ChaChaRng>()
         );
+        poly_tobytes(&pkb);
+        rec_tobytes(&rec);
         sha3_256(&mut output, &keyb)
     });
 }
@@ -55,9 +60,13 @@ fn bench_newhope_shareda(b: &mut Bencher) {
         &mut keyb, &mut pkb, &mut rec,
         &pka, &nonce, rng.gen::<ChaChaRng>()
     );
+    let pkb_bytes = poly_tobytes(&pkb);
+    let rec_bytes = rec_tobytes(&rec);
 
     b.iter(|| {
+        let pkb = poly_frombytes(&pkb_bytes);
+        let rec = rec_frombytes(&rec_bytes);
         shareda(&mut keya, &ska, &pkb, &rec);
         sha3_256(&mut output, &keya);
-    })
+    });
 }
