@@ -112,14 +112,15 @@ fn discardtopoly(a: &mut [u16], buf: &[u8]) -> bool {
         batcher84(&mut x[i..]);
     }
 
-    let r = (1008..1024)
-        .map(|i| 61444u16.wrapping_sub(x[i]))
-        .fold(0, |sum, next| sum | next);
-
-    if r.checked_shr(31).is_some() {
+    if (1008..1024)
+        .map(|i| 61444isize.wrapping_sub(x[i] as _))
+        .fold(0, |sum, next| sum | next)
+        .wrapping_shr(31)
+        .eq(&0)
+    {
+        a[..N].copy_from_slice(&x[..N]);
         true
     } else {
-        a[..N].copy_from_slice(&x[..N]);
         false
     }
 }
@@ -133,7 +134,7 @@ pub fn uniform(a: &mut [u16], nonce: &[u8]) {
     shake128.keccakf();
     shake128.squeeze(&mut buf);
 
-    while discardtopoly(a, &buf) {
+    while !discardtopoly(a, &buf) {
         shake128.squeeze(&mut buf);
     }
 }
