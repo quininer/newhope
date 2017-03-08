@@ -72,16 +72,14 @@ pub fn rec_tobytes(c: &[u16]) -> [u8; RECBYTES] {
 /// let mut nonce = [0; 32];
 /// rng.fill_bytes(&mut nonce);
 ///
-/// let (mut ask, mut apk, mut asharedkey) = ([0; N], [0; N], [0; N]);
-/// let (mut bpk, mut c, mut bsharedkey) = ([0; N], [0; N], [0; N]);
+/// let (mut ask, mut apk, mut asharedkey) = ([0; N], [0; N], [0; 32]);
+/// let (mut bpk, mut c, mut bsharedkey) = ([0; N], [0; N], [0; 32]);
 ///
 /// keygen(&mut ask, &mut apk, &nonce, rng.gen::<ChaChaRng>());
 /// sharedb(&mut bsharedkey, &mut bpk, &mut c, &apk, &nonce, rng.gen::<ChaChaRng>());
 /// shareda(&mut asharedkey, &ask, &bpk, &c);
 ///
-/// for i in 0..asharedkey.len() {
-///     assert_eq!(asharedkey[i], bsharedkey[i]);
-/// }
+/// assert_eq!(asharedkey, bsharedkey);
 /// # }
 /// ```
 #[inline]

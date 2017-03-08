@@ -12,6 +12,7 @@ gcc = "0.3"
 
 [dev-dependencies]
 libc = "0.2"
+rand = "0.3"
 newhope = { path = "..", version = "0.1" }
 
 [features]
