@@ -25,8 +25,6 @@ fn main() {
         cfg.file(cnewhope_root.join(src));
     }
 
-    cfg.file("keygen_poly.c");
-
     cfg.include(cnewhope_root)
         .opt_level(3)
         .debug(true)

@@ -40,8 +40,9 @@ fn test_kex_c() {
     let (mut keya, mut keyb) = ([0; 32], [0; 32]);
     let (mut pkb, mut rec) = ([0; newhope::N], [0; newhope::N]);
     let mut senda = [0; cnewhope::SENDABYTES];
+    let mut ska = cnewhope::Poly::default();
 
-    let ska = unsafe { cnewhope::newhope_keygen_poly(senda.as_mut_ptr()) };
+    unsafe { cnewhope::newhope_keygen(senda.as_mut_ptr(), &mut ska) };
 
     let (pka_bytes, nonce) = senda.split_at(newhope::POLY_BYTES);
     let pka = newhope::poly_frombytes(pka_bytes);
@@ -56,10 +57,8 @@ fn test_kex_c() {
         &newhope::rec_tobytes(&rec)[..]
     ].concat();
 
-    unsafe { cnewhope::newhope_shareda(keya.as_mut_ptr(), ska, bob.as_ptr()) };
+    unsafe { cnewhope::newhope_shareda(keya.as_mut_ptr(), &ska, bob.as_ptr()) };
 
     assert!(keya != [0; 32]);
     assert_eq!(keya, keyb);
-
-    unsafe { libc::free(ska as *mut libc::c_void) };
 }
