@@ -97,10 +97,10 @@ pub fn mul_coefficients(poly: &mut [u16], factors: &[u16]) {
 }
 
 pub fn ntt(a: &mut [u16], omega: &[u16]) {
-    for i in (0..10).step_by(2) {
+    for i in Iterator::step_by(0..10, 2) {
         let mut distance = 1 << i;
         for start in 0..distance {
-            for (jt, j) in (start..(N - 1)).step_by(2 * distance).enumerate() {
+            for (jt, j) in Iterator::step_by(start..(N - 1), 2 * distance).enumerate() {
                 let w = omega[jt] as u32;
                 let tmp = a[j];
                 a[j] = tmp.wrapping_add(a[j + distance]);
@@ -112,7 +112,7 @@ pub fn ntt(a: &mut [u16], omega: &[u16]) {
 
         distance <<= 1;
         for start in 0..distance {
-            for (jt, j) in (start..(N - 1)).step_by(2 * distance).enumerate() {
+            for (jt, j) in Iterator::step_by(start..(N - 1), 2 * distance).enumerate() {
                 let w = omega[jt] as u32;
                 let tmp = a[j];
                 a[j] = barrett_reduce(tmp.wrapping_add(a[j + distance]));

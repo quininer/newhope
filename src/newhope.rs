@@ -50,7 +50,7 @@ pub fn rec_frombytes(r: &[u8]) -> [u16; N] {
 
 pub fn rec_tobytes(c: &[u16]) -> [u8; RECBYTES] {
     let mut output = [0; RECBYTES];
-    for i in (0..N).step_by(4) {
+    for i in Iterator::step_by(0..N, 4) {
         output[i / 4] = c[i] as u8
             | (c[i + 1] << 2) as u8
             | (c[i + 2] << 4) as u8
