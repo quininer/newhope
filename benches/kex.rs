@@ -13,7 +13,7 @@ fn bench_newhope_keygen(b: &mut Bencher) {
     let mut rng = OsRng::new().unwrap().gen::<ChaChaRng>();
 
     b.iter(|| {
-        let (mut sk, mut pk) = (Box::new([0; N]), [0; N]); // because `newhope_keygen_poly` use `calloc`.
+        let (mut sk, mut pk) = ([0; N], [0; N]);
         let mut nonce = [0; 32];
         rng.fill_bytes(&mut nonce);
         keygen(&mut sk[..], &mut pk, &nonce, rng.gen::<ChaChaRng>());
