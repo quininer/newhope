@@ -1,13 +1,13 @@
-extern crate gcc;
+extern crate cc;
 
 use std::path::Path;
-use gcc::Config;
+use cc::Build;
 
 
 fn main() {
     #[cfg(not(feature = "tor"))] let cnewhope_root = Path::new("newhope").join("ref");
     #[cfg(feature = "tor")] let cnewhope_root = Path::new("newhope").join("torref");
-    let mut cfg = Config::new();
+    let mut cfg = Build::new();
 
     for src in &[
         "crypto_stream_chacha20.c",

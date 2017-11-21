@@ -8,12 +8,12 @@ build = "build.rs"
 path = "lib.rs"
 
 [build-dependencies]
-gcc = "0.3"
+cc = "1"
 
 [dev-dependencies]
 libc = "0.2"
 rand = "0.3"
-newhope = { path = "..", version = "0.1" }
+newhope = { path = "..", version = "0.2" }
 
 [features]
 tor = [ "newhope/tor" ]
