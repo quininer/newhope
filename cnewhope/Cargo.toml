@@ -12,8 +12,8 @@ cc = "1"
 
 [dev-dependencies]
 libc = "0.2"
-rand = "0.3"
-newhope = { path = "..", version = "0.2" }
+rand = "0.4"
+newhope = { path = "..", version = "0.3" }
 
 [features]
 tor = [ "newhope/tor" ]

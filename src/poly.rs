@@ -2,7 +2,7 @@ use rand::Rng;
 use byteorder::{ ByteOrder, LittleEndian };
 use tiny_keccak::Keccak;
 use ::params::{
-    N, Q, POLY_BYTES,
+    N, Q,
     PSIS_BITREV_MONTGOMERY, OMEGAS_MONTGOMERY,
     PSIS_INV_MONTGOMERY, OMEGAS_INV_MONTGOMERY
 };
@@ -13,25 +13,22 @@ use ::ntt::{ bitrev_vector, mul_coefficients, ntt as fft };
 const SHAKE128_RATE: usize = 168;
 
 
-pub fn poly_frombytes(a: &[u8]) -> [u16; N] {
-    let mut output = [0; N];
+pub fn poly_frombytes(a: &[u8], p: &mut [u16; N]) {
     for i in 0..(N / 4) {
-        output[4 * i + 0] = (a[7 * i + 0] as u16)
+        p[4 * i + 0] = (a[7 * i + 0] as u16)
             | ((a[7 * i + 1] as u16 & 0x3f) << 8);
-        output[4 * i + 1] = ((a[7 * i + 1] as u16) >> 6)
+        p[4 * i + 1] = ((a[7 * i + 1] as u16) >> 6)
             | ((a[7 * i + 2] as u16) << 2)
             | ((a[7 * i + 3] as u16 & 0x0f) << 10);
-        output[4 * i + 2] = ((a[7 * i + 3] as u16) >> 4)
+        p[4 * i + 2] = ((a[7 * i + 3] as u16) >> 4)
             | ((a[7 * i + 4] as u16) << 4)
             | ((a[7 * i + 5] as u16 & 0x03) << 12);
-        output[4 * i + 3] = ((a[7 * i + 5] as u16) >> 2)
+        p[4 * i + 3] = ((a[7 * i + 5] as u16) >> 2)
             | ((a[7 * i + 6] as u16) << 6);
     }
-    output
 }
 
-pub fn poly_tobytes(p: &[u16; N]) -> [u8; POLY_BYTES] {
-    let mut output = [0; POLY_BYTES];
+pub fn poly_tobytes(p: &[u16; N], a: &mut [u8]) {
     for i in 0..(N / 4) {
         let mut t = [
             barrett_reduce(p[4 * i + 0]),
@@ -60,27 +57,25 @@ pub fn poly_tobytes(p: &[u16; N]) -> [u8; POLY_BYTES] {
         c >>= 15;
         t[3] = m ^ ((t[3] ^ m) & c as u16);
 
-        output[7 * i + 0] = (t[0] & 0xff) as u8;
-        output[7 * i + 1] = ((t[0] >> 8) | (t[1] << 6)) as u8;
-        output[7 * i + 2] = (t[1] >> 2) as u8;
-        output[7 * i + 3] = ((t[1] >> 10) | (t[2] << 4)) as u8;
-        output[7 * i + 4] = (t[2] >> 4) as u8;
-        output[7 * i + 5] = ((t[2] >> 12) | (t[3] << 2)) as u8;
-        output[7 * i + 6] = (t[3] >> 6) as u8;
+        a[7 * i + 0] = (t[0] & 0xff) as u8;
+        a[7 * i + 1] = ((t[0] >> 8) | (t[1] << 6)) as u8;
+        a[7 * i + 2] = (t[1] >> 2) as u8;
+        a[7 * i + 3] = ((t[1] >> 10) | (t[2] << 4)) as u8;
+        a[7 * i + 4] = (t[2] >> 4) as u8;
+        a[7 * i + 5] = ((t[2] >> 12) | (t[3] << 2)) as u8;
+        a[7 * i + 6] = (t[3] >> 6) as u8;
     }
-    output
 }
 
 #[cfg(not(feature = "tor"))]
-pub fn uniform(a: &mut [u16], nonce: &[u8]) {
+pub(crate) fn uniform(a: &mut [u16], nonce: &[u8]) {
     let (mut nblocks, mut pos, mut ctr) = (13, 0, 0);
     let mut buf = [0; SHAKE128_RATE * 13];
     let mut shake128 = Keccak::new_shake128();
 
     shake128.update(nonce);
-    shake128.pad();
-    shake128.keccakf();
-    shake128.squeeze(&mut buf);
+    let mut xof = shake128.xof();
+    xof.squeeze(&mut buf);
 
     while ctr < N {
         let val = LittleEndian::read_u16(&buf[pos..]);
@@ -93,7 +88,7 @@ pub fn uniform(a: &mut [u16], nonce: &[u8]) {
 
         if pos > SHAKE128_RATE * nblocks - 2 {
             nblocks = 1;
-            shake128.squeeze(&mut buf[..SHAKE128_RATE]);
+            xof.squeeze(&mut buf[..SHAKE128_RATE]);
             pos = 0;
         }
     }
@@ -126,20 +121,19 @@ fn discardtopoly(a: &mut [u16], buf: &[u8]) -> bool {
 }
 
 #[cfg(feature = "tor")]
-pub fn uniform(a: &mut [u16], nonce: &[u8]) {
+pub(crate) fn uniform(a: &mut [u16], nonce: &[u8]) {
     let mut buf = [0; SHAKE128_RATE * 16];
     let mut shake128 = Keccak::new_shake128();
     shake128.absorb(nonce);
-    shake128.pad();
-    shake128.keccakf();
-    shake128.squeeze(&mut buf);
+    let mut xof = shake128.xof();
+    xof.squeeze(&mut buf);
 
     while !discardtopoly(a, &buf) {
-        shake128.squeeze(&mut buf);
+        xof.squeeze(&mut buf);
     }
 }
 
-pub fn noise<R: Rng>(r: &mut [u16], rng: &mut R) {
+pub(crate) fn noise<R: Rng>(r: &mut [u16], rng: &mut R) {
     for i in 0..N {
         let t = rng.gen::<u32>();
         let d = (0..8).fold(0, |sum, j| sum + ((t >> j) & 0x01010101));
@@ -150,25 +144,25 @@ pub fn noise<R: Rng>(r: &mut [u16], rng: &mut R) {
     }
 }
 
-pub fn pointwise(r: &mut [u16], a: &[u16], b: &[u16]) {
+pub(crate) fn pointwise(r: &mut [u16], a: &[u16], b: &[u16]) {
     for i in 0..N {
         let t = montgomery_reduce(3186 * b[i] as u32);
         r[i] = montgomery_reduce(t as u32 * a[i] as u32);
     }
 }
 
-pub fn add(r: &mut [u16], a: &[u16], b: &[u16]) {
+pub(crate) fn add(r: &mut [u16], a: &[u16], b: &[u16]) {
     for i in 0..N {
         r[i] = barrett_reduce(a[i].wrapping_add(b[i]));
     }
 }
 
-pub fn ntt(r: &mut [u16]) {
+pub(crate) fn ntt(r: &mut [u16]) {
     mul_coefficients(r, &PSIS_BITREV_MONTGOMERY);
     fft(r, &OMEGAS_MONTGOMERY);
 }
 
-pub fn invntt(r: &mut [u16]) {
+pub(crate) fn invntt(r: &mut [u16]) {
     bitrev_vector(r);
     fft(r, &OMEGAS_INV_MONTGOMERY);
     mul_coefficients(r, &PSIS_INV_MONTGOMERY);
@@ -260,10 +254,13 @@ fn test_discardtopoly() {
 
 #[test]
 fn test_frombytes_tobytes() {
-    let a = [35572; N];
+    use ::params::POLY_BYTES;
 
-    let b = poly_tobytes(&a);
-    let a = poly_frombytes(&b);
+    let mut a = [35572; N];
+    let mut b = [0; POLY_BYTES];
+
+    poly_tobytes(&a, &mut b);
+    poly_frombytes(&b, &mut a);
 
     for i in 0..N {
         assert_eq!(a[i], 10994);

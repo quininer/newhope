@@ -1,5 +1,5 @@
 use rand::Rng;
-use ::params::{ N, RECBYTES };
+use ::params::N;
 use ::error_correction::{ helprec, rec };
 use ::poly::{
     uniform, noise, pointwise, add,
@@ -37,34 +37,29 @@ fn finish_computation(key: &mut [u8], sk: &[u16], bp: &[u16], c: &[u16]) {
     rec(key, &v, c);
 }
 
-pub fn rec_frombytes(r: &[u8]) -> [u16; N] {
-    let mut output = [0; N];
+pub fn rec_frombytes(r: &[u8], c: &mut [u16; N]) {
     for i in 0..(N / 4) {
-        output[4 * i + 0] = r[i] as u16 & 0x03;
-        output[4 * i + 1] = (r[i] >> 2) as u16 & 0x03;
-        output[4 * i + 2] = (r[i] >> 4) as u16 & 0x03;
-        output[4 * i + 3] = (r[i] >> 6) as u16;
+        c[4 * i + 0] = r[i] as u16 & 0x03;
+        c[4 * i + 1] = (r[i] >> 2) as u16 & 0x03;
+        c[4 * i + 2] = (r[i] >> 4) as u16 & 0x03;
+        c[4 * i + 3] = (r[i] >> 6) as u16;
     }
-    output
 }
 
-pub fn rec_tobytes(c: &[u16]) -> [u8; RECBYTES] {
-    let mut output = [0; RECBYTES];
+pub fn rec_tobytes(c: &[u16; N], r: &mut [u8]) {
     for i in (0..N).step_by(4) {
-        output[i / 4] = c[i] as u8
+        r[i / 4] = c[i] as u8
             | (c[i + 1] << 2) as u8
             | (c[i + 2] << 4) as u8
             | (c[i + 3] << 6) as u8;
     }
-    output
 }
 
 
 /// ```
 /// # extern crate rand;
 /// # extern crate newhope;
-/// # use newhope::N;
-/// # use newhope::{ keygen, sharedb, shareda };
+/// # use newhope::{ N, newhope as nh };
 /// # fn main() {
 /// use rand::{ Rng, OsRng, ChaChaRng };
 ///
@@ -75,9 +70,9 @@ pub fn rec_tobytes(c: &[u16]) -> [u8; RECBYTES] {
 /// let (mut ask, mut apk, mut asharedkey) = ([0; N], [0; N], [0; 32]);
 /// let (mut bpk, mut c, mut bsharedkey) = ([0; N], [0; N], [0; 32]);
 ///
-/// keygen(&mut ask, &mut apk, &nonce, rng.gen::<ChaChaRng>());
-/// sharedb(&mut bsharedkey, &mut bpk, &mut c, &apk, &nonce, rng.gen::<ChaChaRng>());
-/// shareda(&mut asharedkey, &ask, &bpk, &c);
+/// nh::keygen(&mut ask, &mut apk, &nonce, rng.gen::<ChaChaRng>());
+/// nh::sharedb(&mut bsharedkey, &mut bpk, &mut c, &apk, &nonce, rng.gen::<ChaChaRng>());
+/// nh::shareda(&mut asharedkey, &ask, &bpk, &c);
 ///
 /// assert_eq!(asharedkey, bsharedkey);
 /// # }
